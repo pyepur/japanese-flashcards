@@ -389,7 +389,23 @@
         "https://script.google.com/macros/s/AKfycbxWgYcXkKRjkQz4U9pZ9ViuYUNOtOBTxSso7L2Ra4HwajadIOBpz8JCVzsOFz6usos/exec";
 
       // --- Deck Organization System ---
+      // Add your new GIDs here when you have them!
       const DECK_CATEGORIES = [
+        {
+          name: "Textbook Chapters",
+          decks: [
+            { name: "Chapter 1", gid: "1117631319" }, // <-- Paste GID between the quotes
+            { name: "Chapter 2", gid: "1246123830" },
+            // { name: "Chapter 3", gid: "" },
+            // { name: "Chapter 4", gid: "" },
+            // { name: "Chapter 5", gid: "" },
+            // { name: "Chapter 6", gid: "" },
+            // { name: "Chapter 7", gid: "" },
+            // { name: "Chapter 8", gid: "" },
+            // { name: "Chapter 9", gid: "" },
+            // { name: "Chapter 10", gid: "" },
+          ],
+        },
         {
           name: "Vocabulary Types",
           decks: [
@@ -628,8 +644,10 @@
 
       function handleDeckSelection(deck) {
         console.log("Deck selected:", deck.name);
-        if (!deck.gid && !deck.sourceGid) {
-          gidError.textContent = "This deck is not configured correctly.";
+        // MODIFIED: Check for empty string GID (placeholders)
+        if ((!deck.gid && !deck.sourceGid) || deck.gid === "") {
+          gidError.textContent =
+            "This deck is not yet configured. Please add the Google Sheet GID to the code.";
           gidError.classList.remove("hidden");
           return;
         }
