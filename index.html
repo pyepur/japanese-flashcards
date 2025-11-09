@@ -54,30 +54,47 @@
       <!-- ===== Deck Selection Screen ===== -->
       <div
         id="selection-screen"
-        class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center relative"
+        class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center relative max-h-full overflow-y-auto"
       >
+        <!-- Small Add button inside the container (top right) -->
+        <button
+          id="btn-add-word"
+          class="absolute top-4 right-4 text-pink-400 hover:text-pink-600 bg-pink-50 hover:bg-pink-100 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300"
+          title="Add New Word"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2.5"
+            stroke="currentColor"
+            class="w-5 h-5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+        </button>
+
         <h2 class="text-3xl font-bold tracking-tight text-gray-900 japanese">
-          Vocabulary
+          Flashcards
         </h2>
-        <p class="mt-1 text-lg text-gray-600">Select a Deck</p>
-        <div id="deck-buttons-container" class="mt-6 space-y-3">
-          <!-- Deck buttons will be dynamically inserted here -->
+        <p class="mt-1 text-lg text-gray-600 mb-6">Select a Deck</p>
+
+        <!-- Container for categories -->
+        <div id="deck-categories-container" class="space-y-6 text-left">
+          <!-- Categories and buttons will be dynamically inserted here -->
         </div>
+
         <div
           id="gid-error"
           class="hidden mt-4 text-center text-sm font-medium text-red-600 bg-red-50 p-3 rounded-lg"
         ></div>
       </div>
 
-      <!-- NEW: Floating Action Button for Adding Words (Only visible on selection screen) -->
-      <button
-        id="fab-add-word"
-        class="absolute bottom-6 right-6 bg-pink-500 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-3xl hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 z-10"
-      >
-        +
-      </button>
-
-      <!-- ===== NEW: Add Word Modal ===== -->
+      <!-- ===== Add Word Modal ===== -->
       <div
         id="add-word-modal"
         class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
@@ -230,7 +247,7 @@
             </button>
           </div>
 
-          <!-- NEW: Session Progress -->
+          <!-- Session Progress -->
           <div
             class="flex justify-between text-xs font-semibold text-gray-600 mb-1"
           >
@@ -270,7 +287,6 @@
               class="card__face card__face--front absolute w-full h-full bg-white rounded-2xl shadow-lg flex items-center justify-center p-6"
             >
               <div class="text-center space-y-2">
-                <!-- MODIFIED: Replaced card-front-text with two spans for more flexibility -->
                 <span
                   id="card-front-main"
                   class="block text-3xl sm:text-4xl font-bold text-gray-900 break-all japanese"
@@ -368,23 +384,32 @@
       const GOOGLE_SHEET_URL =
         "https://docs.google.com/spreadsheets/d/1vFXDC9uD2cIifk1kVjWcWk4ltaWAiANWJ9pC_qwNgYg/edit?usp=sharing";
 
-      // *** CRITICAL: PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ***
+      // *** YOUR SAVED GOOGLE APPS SCRIPT WEB APP URL ***
       const APPS_SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbxWgYcXkKRjkQz4U9pZ9ViuYUNOtOBTxSso7L2Ra4HwajadIOBpz8JCVzsOFz6usos/exec"; // e.g., "https://script.google.com/macros/s/AKfycbx.../exec"
+        "https://script.google.com/macros/s/AKfycbxWgYcXkKRjkQz4U9pZ9ViuYUNOtOBTxSso7L2Ra4HwajadIOBpz8JCVzsOFz6usos/exec";
 
-      const DECKS = [
-        { name: "Verbs", gid: "0" },
-        { name: "な Adjectives", gid: "1583091929" },
-        { name: "い Adjectives", gid: "1899131341" },
-        { name: "Verbs (Te Form)", type: "te-form", sourceGid: "0" },
+      // --- Deck Organization System ---
+      const DECK_CATEGORIES = [
+        {
+          name: "Vocabulary Types",
+          decks: [
+            { name: "Verbs", gid: "0" },
+            { name: "い Adjectives", gid: "1899131341" },
+            { name: "な Adjectives", gid: "1583091929" },
+          ],
+        },
+        {
+          name: "Grammar Practice",
+          decks: [{ name: "Te-Form Drills", type: "te-form", sourceGid: "0" }],
+        },
       ];
 
       const NEW_CARDS_PER_SESSION = 10;
 
       // --- DOM Elements ---
       const selectionScreen = document.getElementById("selection-screen");
-      const deckButtonsContainer = document.getElementById(
-        "deck-buttons-container"
+      const deckCategoriesContainer = document.getElementById(
+        "deck-categories-container"
       );
       const gidError = document.getElementById("gid-error");
       const loadingScreen = document.getElementById("loading-screen");
@@ -418,8 +443,8 @@
         "back-to-decks-completed"
       );
 
-      // --- NEW: Add Modal Elements ---
-      const fabAddWord = document.getElementById("fab-add-word");
+      // --- Add Modal Elements ---
+      const btnAddWord = document.getElementById("btn-add-word");
       const addWordModal = document.getElementById("add-word-modal");
       const addWordForm = document.getElementById("add-word-form");
       const cancelAddBtn = document.getElementById("cancel-add");
@@ -450,8 +475,8 @@
       backToDecksStudy.addEventListener("click", showSelectionScreen);
       backToDecksCompleted.addEventListener("click", showSelectionScreen);
 
-      // --- NEW: Add Word Event Listeners ---
-      fabAddWord.addEventListener("click", () => {
+      // --- Add Word Event Listeners ---
+      btnAddWord.addEventListener("click", () => {
         addWordModal.classList.remove("hidden");
         addFormSuccess.classList.add("hidden");
         addFormError.classList.add("hidden");
@@ -460,32 +485,27 @@
         addWordModal.classList.add("hidden")
       );
       inputType.addEventListener("change", (e) => {
-        // Show/Hide group input based on type
         if (e.target.value === "verb") {
           groupInputContainer.classList.remove("invisible");
         } else {
           groupInputContainer.classList.add("invisible");
         }
       });
-      // Trigger change once on load to set initial state
       inputType.dispatchEvent(new Event("change"));
 
       addWordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         if (!APPS_SCRIPT_URL) {
           addFormError.textContent =
             "Error: Apps Script URL not configured in code.";
           addFormError.classList.remove("hidden");
           return;
         }
-
         const submitBtnOriginalText = submitAddBtn.textContent;
         submitAddBtn.textContent = "Adding...";
         submitAddBtn.disabled = true;
         addFormError.classList.add("hidden");
         addFormSuccess.classList.add("hidden");
-
         const data = {
           english: document.getElementById("input-english").value,
           hiragana: document.getElementById("input-hiragana").value,
@@ -493,24 +513,16 @@
           type: document.getElementById("input-type").value,
           group: document.getElementById("input-group").value,
         };
-
         try {
-          // We use 'no-cors' because Google Apps Script doesn't easily support CORS for simple POSTs.
-          // This means we won't get a readable response back, but the data WILL be sent.
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
           });
-
-          // Because of 'no-cors', we assume success if no network error was thrown.
           addFormSuccess.classList.remove("hidden");
           addWordForm.reset();
-          // Reset dropdown visibility
           inputType.dispatchEvent(new Event("change"));
-
-          // Auto-hide modal after 1.5s
           setTimeout(() => {
             addWordModal.classList.add("hidden");
             addFormSuccess.classList.add("hidden");
@@ -526,7 +538,7 @@
         }
       });
 
-      // --- Core Logic (Previous functions remain mostly same) ---
+      // --- Core Logic ---
 
       function flipCard() {
         if (!currentCard) return;
@@ -568,23 +580,44 @@
       }
 
       function createDeckSelectionScreen() {
-        console.log("Creating Deck Selection Screen...");
-        deckButtonsContainer.innerHTML = "";
+        console.log("Creating Organized Deck Selection Screen...");
+        deckCategoriesContainer.innerHTML = "";
         gidError.classList.add("hidden");
-        DECKS.forEach((deck) => {
-          const button = document.createElement("button");
-          button.className =
-            "w-full bg-white text-pink-700 py-4 rounded-lg font-semibold text-lg shadow-md border border-pink-100 hover:bg-pink-50 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300";
-          button.textContent = deck.name;
-          button.onclick = () => handleDeckSelection(deck);
-          deckButtonsContainer.appendChild(button);
+
+        DECK_CATEGORIES.forEach((category) => {
+          const header = document.createElement("h3");
+          header.className =
+            "text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 japanese";
+          header.textContent = category.name;
+          deckCategoriesContainer.appendChild(header);
+
+          const grid = document.createElement("div");
+          grid.className = "grid gap-3 mb-8";
+
+          category.decks.forEach((deck) => {
+            const button = document.createElement("button");
+            button.className =
+              "w-full bg-white text-pink-700 py-4 px-6 rounded-xl font-semibold text-lg shadow-sm border border-pink-100 hover:bg-pink-50 hover:shadow-md transition-all text-left flex justify-between items-center";
+
+            const spanText = document.createElement("span");
+            spanText.textContent = deck.name;
+            button.appendChild(spanText);
+
+            button.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-pink-300"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
+
+            button.onclick = () => handleDeckSelection(deck);
+            grid.appendChild(button);
+          });
+
+          deckCategoriesContainer.appendChild(grid);
         });
+
         showSelectionScreen();
       }
 
       function showSelectionScreen() {
         selectionScreen.classList.remove("hidden");
-        fabAddWord.classList.remove("hidden"); // Show ADD button
+        btnAddWord.classList.remove("hidden");
         loadingScreen.classList.add("hidden");
         studyScreen.classList.add("hidden");
         completedScreen.classList.add("hidden");
@@ -603,7 +636,7 @@
         isTeFormDeck = deck.type === "te-form";
         const gid = isTeFormDeck ? deck.sourceGid : deck.gid;
         selectionScreen.classList.add("hidden");
-        fabAddWord.classList.add("hidden"); // Hide ADD button during study
+        btnAddWord.classList.add("hidden");
         loadingScreen.classList.remove("hidden");
         gidError.classList.add("hidden");
         initializeApp(gid);
@@ -1003,7 +1036,7 @@
 
       function showError(message, headers = []) {
         selectionScreen.classList.add("hidden");
-        fabAddWord.classList.add("hidden");
+        btnAddWord.classList.add("hidden");
         studyScreen.classList.add("hidden");
         completedScreen.classList.add("hidden");
         loadingScreen.classList.remove("hidden");
