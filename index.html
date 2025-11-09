@@ -1,515 +1,1108 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-gray-50">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kotoba Cards - Japanese Flashcards</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .japanese {
-            font-family: 'Noto Sans JP', sans-serif;
-        }
-        /* --- Card Flip --- */
-        .scene {
-            perspective: 600px;
-        }
-        .card {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-        .card.is-flipped {
-            transform: rotateY(180deg);
-        }
-        .card__face {
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
-        .card__face--back {
-            transform: rotateY(180deg);
-        }
-        
-        /* Hide scrollbar for all elements */
-        ::-webkit-scrollbar {
-            width: 0px;
-            background: transparent; /* make scrollbar transparent */
-        }
+      body {
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .japanese {
+        font-family: "Noto Sans JP", sans-serif;
+      }
+      /* --- Card Flip --- */
+      .scene {
+        perspective: 600px;
+      }
+      .card {
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+      }
+      .card.is-flipped {
+        transform: rotateY(180deg);
+      }
+      .card__face {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+      .card__face--back {
+        transform: rotateY(180deg);
+      }
+
+      /* Hide scrollbar for all elements */
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent; /* make scrollbar transparent */
+      }
     </style>
-</head>
-<body class="h-full flex items-center justify-center p-4 bg-pink-50">
-
+  </head>
+  <body class="h-full flex items-center justify-center p-4 bg-pink-50">
     <div id="app-container" class="w-full max-w-md mx-auto">
+      <!-- ===== Deck Selection Screen ===== -->
+      <div
+        id="selection-screen"
+        class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center"
+      >
+        <h2 class="text-3xl font-bold tracking-tight text-gray-900 japanese">
+          単語帳を選ぶ
+        </h2>
+        <p class="mt-1 text-lg text-gray-600">Select a Deck</p>
+        <div id="deck-buttons-container" class="mt-6 space-y-3">
+          <!-- Deck buttons will be dynamically inserted here -->
+        </div>
+        <div
+          id="gid-error"
+          class="hidden mt-4 text-center text-sm font-medium text-red-600 bg-red-50 p-3 rounded-lg"
+        ></div>
+      </div>
 
-        <!-- ===== Deck Selection Screen ===== -->
-        <div id="selection-screen" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 japanese">単語帳を選ぶ</h2>
-            <p class="mt-1 text-lg text-gray-600">Select a Deck</p>
-            <div id="deck-buttons-container" class="mt-6 space-y-3">
-                <!-- Deck buttons will be dynamically inserted here -->
-            </div>
-            <div id="gid-error" class="hidden mt-4 text-center text-sm font-medium text-red-600 bg-red-50 p-3 rounded-lg"></div>
+      <!-- ===== Loading Screen (now hidden by default) ===== -->
+      <div
+        id="loading-screen"
+        class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center"
+      >
+        <svg
+          class="mx-auto h-12 w-12 text-pink-500 animate-pulse"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"
+          />
+        </svg>
+        <h2
+          class="mt-3 text-2xl font-bold tracking-tight text-gray-900 japanese"
+        >
+          デッキをロード中
+        </h2>
+        <p class="mt-1 text-base text-gray-600">Loading deck...</p>
+        <div
+          id="error-message"
+          class="hidden mt-4 text-center text-sm font-medium text-red-600 bg-red-50 p-3 rounded-lg"
+        ></div>
+        <div
+          id="debug-headers"
+          class="hidden mt-4 text-left text-xs text-gray-500 bg-gray-50 p-3 rounded-lg overflow-x-auto"
+        ></div>
+      </div>
+
+      <!-- ===== Study Screen ===== -->
+      <div id="study-screen" class="hidden w-full transition-all">
+        <!-- Header with Back Button and Progress Bar -->
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <button
+              id="back-to-decks-study"
+              class="text-sm font-medium text-pink-600 hover:text-pink-800 transition-colors"
+            >
+              &larr; Change Deck
+            </button>
+          </div>
+
+          <!-- NEW: Session Progress -->
+          <div
+            class="flex justify-between text-xs font-semibold text-gray-600 mb-1"
+          >
+            <span id="session-progress" class="text-left">Session: 0 / 0</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+            <div
+              id="session-progress-bar"
+              class="bg-blue-500 h-2.5 rounded-full transition-all duration-500"
+              style="width: 0%"
+            ></div>
+          </div>
+
+          <!-- Deck-wide Progress -->
+          <div
+            class="flex justify-between text-xs font-semibold text-pink-800 mb-1"
+          >
+            <span id="level-0-count">New: 0</span>
+            <span id="level-1-count">Learning: 0</span>
+            <span id="level-2-count">Familiar: 0</span>
+            <span id="level-3-count">Mastered: 0</span>
+          </div>
+          <div class="w-full bg-pink-200 rounded-full h-2.5">
+            <div
+              id="progress-bar"
+              class="bg-pink-500 h-2.5 rounded-full transition-all duration-500"
+              style="width: 0%"
+            ></div>
+          </div>
         </div>
 
-        <!-- ===== Loading Screen (now hidden by default) ===== -->
-        <div id="loading-screen" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full transition-all text-center">
-            <svg class="mx-auto h-12 w-12 text-pink-500 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
-            </svg>
-            <h2 class="mt-3 text-2xl font-bold tracking-tight text-gray-900 japanese">デッキをロード中</h2>
-            <p class="mt-1 text-base text-gray-600">Loading deck...</p>
-            <div id="error-message" class="hidden mt-4 text-center text-sm font-medium text-red-600 bg-red-50 p-3 rounded-lg"></div>
-            <div id="debug-headers" class="hidden mt-4 text-left text-xs text-gray-500 bg-gray-50 p-3 rounded-lg overflow-x-auto"></div>
+        <!-- Flashcard -->
+        <div class="scene w-full h-80 sm:h-96">
+          <div id="card" class="card relative w-full h-full">
+            <!-- Front (English / Base Form) -->
+            <div
+              class="card__face card__face--front absolute w-full h-full bg-white rounded-2xl shadow-lg flex items-center justify-center p-6"
+            >
+              <div class="text-center space-y-2">
+                <!-- MODIFIED: Replaced card-front-text with two spans for more flexibility -->
+                <span
+                  id="card-front-main"
+                  class="block text-3xl sm:text-4xl font-bold text-gray-900 break-all japanese"
+                ></span>
+                <span
+                  id="card-front-sub"
+                  class="block text-2xl sm:text-3xl text-gray-700 japanese break-all"
+                ></span>
+              </div>
+            </div>
+            <!-- Back (Japanese / Te Form) -->
+            <div
+              class="card__face card__face--back absolute w-full h-full bg-white rounded-2xl shadow-lg flex items-center justify-center p-6"
+            >
+              <div class="text-center space-y-2">
+                <span
+                  id="card-group"
+                  class="block text-sm font-semibold text-pink-500 japanese"
+                ></span>
+                <span
+                  id="card-kanji"
+                  class="block text-5xl sm:text-6xl font-bold text-gray-900 japanese break-all"
+                ></span>
+                <span
+                  id="card-hiragana"
+                  class="block text-2xl sm:text-3xl text-gray-700 japanese break-all"
+                ></span>
+                <span
+                  id="card-romaji"
+                  class="block text-xl text-gray-500"
+                ></span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- ===== Study Screen ===== -->
-        <div id="study-screen" class="hidden w-full transition-all">
-            <!-- Header with Back Button and Progress Bar -->
-            <div class="mb-4">
-                <div class="flex justify-between items-center mb-2">
-                    <button id="back-to-decks-study" class="text-sm font-medium text-pink-600 hover:text-pink-800 transition-colors">
-                        &larr; Change Deck
-                    </button>
-                </div>
-                
-                <!-- NEW: Session Progress -->
-                <div class="flex justify-between text-xs font-semibold text-gray-600 mb-1">
-                    <span id="session-progress" class="text-left">Session: 0 / 0</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                    <div id="session-progress-bar" class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
+        <!-- Tap to Flip Message -->
+        <p id="tap-to-flip" class="text-center text-gray-500 font-medium mt-4">
+          Tap card to flip
+        </p>
 
-                <!-- Deck-wide Progress -->
-                <div class="flex justify-between text-xs font-semibold text-pink-800 mb-1">
-                    <span id="level-0-count">New: 0</span>
-                    <span id="level-1-count">Learning: 0</span>
-                    <span id="level-2-count">Familiar: 0</span>
-                    <span id="level-3-count">Mastered: 0</span>
-                </div>
-                <div class="w-full bg-pink-200 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-pink-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Flashcard -->
-            <div class="scene w-full h-80 sm:h-96">
-                <div id="card" class="card relative w-full h-full">
-                    <!-- Front (English / Base Form) -->
-                    <div class="card__face card__face--front absolute w-full h-full bg-white rounded-2xl shadow-lg flex items-center justify-center p-6">
-                        <div class="text-center space-y-2">
-                            <!-- MODIFIED: Replaced card-front-text with two spans for more flexibility -->
-                            <span id="card-front-main" class="block text-3xl sm:text-4xl font-bold text-gray-900 break-all japanese"></span>
-                            <span id="card-front-sub" class="block text-2xl sm:text-3xl text-gray-700 japanese break-all"></span>
-                        </div>
-                    </div>
-                    <!-- Back (Japanese / Te Form) -->
-                    <div class="card__face card__face--back absolute w-full h-full bg-white rounded-2xl shadow-lg flex items-center justify-center p-6">
-                        <div class="text-center space-y-2">
-                            <span id="card-group" class="block text-sm font-semibold text-pink-500 japanese"></span>
-                            <span id="card-kanji" class="block text-5xl sm:text-6xl font-bold text-gray-900 japanese break-all"></span>
-                            <span id="card-hiragana" class="block text-2xl sm:text-3xl text-gray-700 japanese break-all"></span>
-                            <span id="card-romaji" class="block text-xl text-gray-500"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Tap to Flip Message -->
-            <p id="tap-to-flip" class="text-center text-gray-500 font-medium mt-4">Tap card to flip</p>
-
-            <!-- Answer Buttons -->
-            <div id="answer-buttons" class="hidden grid grid-cols-2 gap-4 mt-6">
-                <button id="btn-struggled" class="w-full bg-white text-red-500 py-4 rounded-lg font-semibold text-base shadow-md border border-red-200 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300">
-                    I Struggled
-                </button>
-                <button id="btn-known" class="w-full bg-white text-green-600 py-4 rounded-lg font-semibold text-base shadow-md border border-green-200 hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-400">
-                    I Knew It
-                </button>
-            </div>
+        <!-- Answer Buttons -->
+        <div id="answer-buttons" class="hidden grid grid-cols-2 gap-4 mt-6">
+          <button
+            id="btn-struggled"
+            class="w-full bg-white text-red-500 py-4 rounded-lg font-semibold text-base shadow-md border border-red-200 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+          >
+            I Struggled
+          </button>
+          <button
+            id="btn-known"
+            class="w-full bg-white text-green-600 py-4 rounded-lg font-semibold text-base shadow-md border border-green-200 hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-400"
+          >
+            I Knew It
+          </button>
         </div>
-        
-        <!-- ===== Completed Screen ===== -->
-        <div id="completed-screen" class="hidden bg-white p-6 sm:p-10 rounded-2xl shadow-lg w-full text-center transition-all">
-            <span class="text-6xl">🎉</span>
-            <h2 class="mt-4 text-3xl font-bold tracking-tight text-gray-900 japanese">お疲れ様！</h2>
-            <p class="mt-1 text-lg text-gray-600">Otsukaresama!</p>
-            <p class="mt-4 text-base text-gray-500">
-                You've mastered all the words in this deck.
-            </p>
-            <div class="mt-6 space-y-3">
-                <button id="reset-deck" class="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold text-sm shadow-md hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2">
-                    Study Again (Reset All)
-                </button>
-                <button id="back-to-decks-completed" class="w-full bg-white text-gray-700 py-3 rounded-lg font-semibold text-sm shadow-md border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
-                    Change Deck
-                </button>
-            </div>
-        </div>
+      </div>
 
+      <!-- ===== Completed Screen ===== -->
+      <div
+        id="completed-screen"
+        class="hidden bg-white p-6 sm:p-10 rounded-2xl shadow-lg w-full text-center transition-all"
+      >
+        <span class="text-6xl">🎉</span>
+        <h2
+          class="mt-4 text-3xl font-bold tracking-tight text-gray-900 japanese"
+        >
+          お疲れ様！
+        </h2>
+        <p class="mt-1 text-lg text-gray-600">Otsukaresama!</p>
+        <p class="mt-4 text-base text-gray-500">
+          You've mastered all the words in this deck.
+        </p>
+        <div class="mt-6 space-y-3">
+          <button
+            id="reset-deck"
+            class="w-full bg-pink-500 text-white py-3 rounded-lg font-semibold text-sm shadow-md hover:bg-pink-600 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2"
+          >
+            Study Again (Reset All)
+          </button>
+          <button
+            id="back-to-decks-completed"
+            class="w-full bg-white text-gray-700 py-3 rounded-lg font-semibold text-sm shadow-md border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+          >
+            Change Deck
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
-        // --- App Config ---
-        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1vFXDC9uD2cIifk1kVjWcWk4ltaWAiANWJ9pC_qwNgYg/edit?usp=sharing";
-        
-        /**
-         * --- HOW TO ADD NEW DECKS ---
-         * 1. Go to your Google Sheet.
-         * 2. Click on the tab you want to add (e.g., "な Adj").
-         * 3. Look at the URL in your browser. Find the part that says "gid=...".
-         * 4. Copy that number (the 'gid').
-         * 5. Add a new line to the DECKS array below.
-         */
-        const DECKS = [
-            { name: "Verbs", gid: '0' },
-            { name: "な Adjectives", gid: '1583091929' },
-            { name: "い Adjectives", gid: '1899131341' },
-            // --- NEW: Special Te-Form Deck ---
-            // This deck uses 'type' to tell the app to generate it
-            // from the 'sourceGid' (your Verbs tab).
-            { name: "Verbs (Te Form)", type: 'te-form', sourceGid: '0' }
-        ];
+      console.log("Kotoba Cards App Starting..."); // DEBUG LOG
 
-        // --- NEW: Study Session Config ---
-        const NEW_CARDS_PER_SESSION = 10; // Max new words to introduce in one batch
+      // --- App Config ---
+      const GOOGLE_SHEET_URL =
+        "https://docs.google.com/spreadsheets/d/1vFXDC9uD2cIifk1kVjWcWk4ltaWAiANWJ9pC_qwNgYg/edit?usp=sharing";
 
-        // --- DOM Elements ---
-        const selectionScreen = document.getElementById('selection-screen');
-        const deckButtonsContainer = document.getElementById('deck-buttons-container');
-        const gidError = document.getElementById('gid-error');
-        
-        const loadingScreen = document.getElementById('loading-screen');
-        const studyScreen = document.getElementById('study-screen');
-        const completedScreen = document.getElementById('completed-screen');
-        const errorMessage = document.getElementById('error-message');
-        const debugHeaders = document.getElementById('debug-headers');
-        
-        const card = document.getElementById('card');
-        // MODIFIED: Replaced cardFrontText
-        const cardFrontMain = document.getElementById('card-front-main');
-        const cardFrontSub = document.getElementById('card-front-sub');
-        
-        const cardGroup = document.getElementById('card-group');
-        const cardKanji = document.getElementById('card-kanji');
-        const cardHiragana = document.getElementById('card-hiragana');
-        const cardRomaji = document.getElementById('card-romaji');
-        
-        const tapToFlip = document.getElementById('tap-to-flip');
-        const answerButtons = document.getElementById('answer-buttons');
-        const btnStruggled = document.getElementById('btn-struggled');
-        const btnKnown = document.getElementById('btn-known');
-        
-        const progressBar = document.getElementById('progress-bar');
-        const level0Count = document.getElementById('level-0-count');
-        const level1Count = document.getElementById('level-1-count');
-        const level2Count = document.getElementById('level-2-count');
-        const level3Count = document.getElementById('level-3-count');
-        
-        // NEW: Session progress elements
-        const sessionProgress = document.getElementById('session-progress');
-        const sessionProgressBar = document.getElementById('session-progress-bar');
-        
-        const resetDeckButton = document.getElementById('reset-deck');
-        const backToDecksStudy = document.getElementById('back-to-decks-study');
-        const backToDecksCompleted = document.getElementById('back-to-decks-completed');
+      /**
+       * --- HOW TO ADD NEW DECKS ---
+       * 1. Go to your Google Sheet.
+       * 2. Click on the tab you want to add (e.g., "な Adj").
+       * 3. Look at the URL in your browser. Find the part that says "gid=...".
+       * 4. Copy that number (the 'gid').
+       * 5. Add a new line to the DECKS array below.
+       */
+      const DECKS = [
+        { name: "Verbs", gid: "0" },
+        { name: "な Adjectives", gid: "1583091929" },
+        { name: "い Adjectives", gid: "1899131341" },
+        // --- NEW: Special Te-Form Deck ---
+        // This deck uses 'type' to tell the app to generate it
+        // from the 'sourceGid' (your Verbs tab).
+        { name: "Verbs (Te Form)", type: "te-form", sourceGid: "0" },
+      ];
 
-        // --- App State ---
-        let currentDeck = []; // The full deck of { english, japanese, ... } objects
-        let studyQueue = []; // The words to be studied in this session
-        let currentCard = null; // The word object currently on display
-        let currentSheetId = null; // The Google Sheet ID
-        let deckStorageKey = null; // Key for localStorage
-        let isTeFormDeck = false; // NEW: Flag for Te-form deck logic
+      // --- NEW: Study Session Config ---
+      const NEW_CARDS_PER_SESSION = 10; // Max new words to introduce in one batch
 
-        // NEW: Session tracking
-        let sessionTotal = 0;
-        let sessionCardsDone = 0;
+      // --- DOM Elements ---
+      const selectionScreen = document.getElementById("selection-screen");
+      const deckButtonsContainer = document.getElementById(
+        "deck-buttons-container"
+      );
+      const gidError = document.getElementById("gid-error");
 
-        // --- Event Listeners ---
-        document.addEventListener('DOMContentLoaded', createDeckSelectionScreen); // Show selection on start
-        card.addEventListener('click', flipCard);
-        btnStruggled.addEventListener('click', () => handleAnswer(false));
-        btnKnown.addEventListener('click', () => handleAnswer(true));
-        resetDeckButton.addEventListener('click', resetCurrentDeck);
-        backToDecksStudy.addEventListener('click', showSelectionScreen);
-        backToDecksCompleted.addEventListener('click', showSelectionScreen);
+      const loadingScreen = document.getElementById("loading-screen");
+      const studyScreen = document.getElementById("study-screen");
+      const completedScreen = document.getElementById("completed-screen");
+      const errorMessage = document.getElementById("error-message");
+      const debugHeaders = document.getElementById("debug-headers");
 
-        // --- Core Logic ---
+      const card = document.getElementById("card");
+      // MODIFIED: Replaced cardFrontText
+      const cardFrontMain = document.getElementById("card-front-main");
+      const cardFrontSub = document.getElementById("card-front-sub");
 
-        /**
-         * --- ADDED: Flips the card when clicked. ---
-         */
-        function flipCard() {
-            if (!currentCard) return; // Don't flip if no card
-            
-            card.classList.toggle('is-flipped');
-            
-            // Show/hide answer buttons
-            if (card.classList.contains('is-flipped')) {
-                tapToFlip.classList.add('hidden');
-                answerButtons.classList.remove('hidden');
-            } else {
-                tapToFlip.classList.remove('hidden');
-                answerButtons.classList.add('hidden');
-            }
+      const cardGroup = document.getElementById("card-group");
+      const cardKanji = document.getElementById("card-kanji");
+      const cardHiragana = document.getElementById("card-hiragana");
+      const cardRomaji = document.getElementById("card-romaji");
+
+      const tapToFlip = document.getElementById("tap-to-flip");
+      const answerButtons = document.getElementById("answer-buttons");
+      const btnStruggled = document.getElementById("btn-struggled");
+      const btnKnown = document.getElementById("btn-known");
+
+      const progressBar = document.getElementById("progress-bar");
+      const level0Count = document.getElementById("level-0-count");
+      const level1Count = document.getElementById("level-1-count");
+      const level2Count = document.getElementById("level-2-count");
+      const level3Count = document.getElementById("level-3-count");
+
+      // NEW: Session progress elements
+      const sessionProgress = document.getElementById("session-progress");
+      const sessionProgressBar = document.getElementById(
+        "session-progress-bar"
+      );
+
+      const resetDeckButton = document.getElementById("reset-deck");
+      const backToDecksStudy = document.getElementById("back-to-decks-study");
+      const backToDecksCompleted = document.getElementById(
+        "back-to-decks-completed"
+      );
+
+      // --- App State ---
+      let currentDeck = []; // The full deck of { english, japanese, ... } objects
+      let studyQueue = []; // The words to be studied in this session
+      let currentCard = null; // The word object currently on display
+      let currentSheetId = null; // The Google Sheet ID
+      let deckStorageKey = null; // Key for localStorage
+      let isTeFormDeck = false; // NEW: Flag for Te-form deck logic
+
+      // NEW: Session tracking
+      let sessionTotal = 0;
+      let sessionCardsDone = 0;
+
+      // --- Event Listeners ---
+      document.addEventListener("DOMContentLoaded", createDeckSelectionScreen); // Show selection on start
+      card.addEventListener("click", flipCard);
+      btnStruggled.addEventListener("click", () => handleAnswer(false));
+      btnKnown.addEventListener("click", () => handleAnswer(true));
+      resetDeckButton.addEventListener("click", resetCurrentDeck);
+      backToDecksStudy.addEventListener("click", showSelectionScreen);
+      backToDecksCompleted.addEventListener("click", showSelectionScreen);
+
+      // --- Core Logic ---
+
+      /**
+       * --- ADDED: Flips the card when clicked. ---
+       */
+      function flipCard() {
+        if (!currentCard) return; // Don't flip if no card
+
+        card.classList.toggle("is-flipped");
+
+        // Show/hide answer buttons
+        if (card.classList.contains("is-flipped")) {
+          tapToFlip.classList.add("hidden");
+          answerButtons.classList.remove("hidden");
+        } else {
+          tapToFlip.classList.remove("hidden");
+          answerButtons.classList.add("hidden");
         }
-        
-        /**
-         * --- ADDED: Handles the user's answer (Struggled or Knew It). ---
-         */
-        function handleAnswer(knewIt) {
-            if (!currentCard) return;
+      }
 
-            // 1. Update card level
-            let currentLevel = currentCard.level;
-            if (knewIt) {
-                // Move up a level
-                currentLevel = Math.min(currentLevel + 1, 3); // Max level is 3
-            } else {
-                // Move down a level
-                currentLevel = Math.max(currentLevel - 1, 1); // Min level is 1 (Learning)
-                // If it was New (0), it becomes 1. If it was Familiar (2), it becomes 1.
-            }
-            currentCard.level = currentLevel;
+      /**
+       * --- ADDED: Handles the user's answer (Struggled or Knew It). ---
+       */
+      function handleAnswer(knewIt) {
+        if (!currentCard) return;
 
-            // 2. Save progress
-            saveDeckToStorage();
-            
-            // 3. Update session progress
-            sessionCardsDone++;
-            
-            // 4. Update UI
-            updateProgressUI();
-
-            // 5. Check if session is over
-            if (studyQueue.length === 0) {
-                // Session is done, rebuild the queue
-                startStudySession(); // This will either build a new session or go to Completed
-            } else {
-                // More cards in this session, show next card
-                nextCard();
-            }
+        // 1. Update card level
+        let currentLevel = currentCard.level;
+        if (knewIt) {
+          // Move up a level
+          currentLevel = Math.min(currentLevel + 1, 3); // Max level is 3
+        } else {
+          // Move down a level
+          currentLevel = Math.max(currentLevel - 1, 1); // Min level is 1 (Learning)
+          // If it was New (0), it becomes 1. If it was Familiar (2), it becomes 1.
         }
+        currentCard.level = currentLevel;
 
-        /**
-         * Custom error class to pass headers for debugging.
-         */
-        class ErrorWithHeaders extends Error {
-            constructor(message, headers) {
-                super(message);
-                this.name = "ErrorWithHeaders";
-                this.headers = headers;
-            }
-        }
+        // 2. Save progress
+        saveDeckToStorage();
 
-        /**
-         * NEW: Creates the deck selection buttons on the main screen.
-         */
-        function createDeckSelectionScreen() {
-            deckButtonsContainer.innerHTML = ''; // Clear old buttons
-            gidError.classList.add('hidden');
-            
-            DECKS.forEach(deck => {
-                const button = document.createElement('button');
-                button.className = "w-full bg-white text-pink-700 py-4 rounded-lg font-semibold text-lg shadow-md border border-pink-100 hover:bg-pink-50 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300";
-                button.textContent = deck.name;
-                button.onclick = () => handleDeckSelection(deck); // MODIFIED: Pass the whole deck object
-                deckButtonsContainer.appendChild(button);
-            });
-            
-            showSelectionScreen();
-        }
-        
-        /**
-         * NEW: Shows the selection screen and hides others.
-         */
-        function showSelectionScreen() {
-            selectionScreen.classList.remove('hidden');
-            loadingScreen.classList.add('hidden');
-            studyScreen.classList.add('hidden');
-            completedScreen.classList.add('hidden');
-            
-            // Reset state
-            currentDeck = [];
-            studyQueue = [];
-            currentCard = null;
-        }
-        
-        /**
-         * NEW: Handles clicking a deck button.
-         */
-        function handleDeckSelection(deck) { // MODIFIED: Takes deck object
-            if (!deck.gid && !deck.sourceGid) {
-                gidError.textContent = 'This deck is not configured correctly.';
-                gidError.classList.remove('hidden');
-                return;
-            }
-            
-            // NEW: Set Te-form flag and determine GID to load
-            isTeFormDeck = (deck.type === 'te-form');
-            const gid = isTeFormDeck ? deck.sourceGid : deck.gid;
-            
-            selectionScreen.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            gidError.classList.add('hidden');
-            
-            initializeApp(gid); // Load the selected/source deck
-        }
+        // 3. Update session progress
+        sessionCardsDone++;
 
-        /**
-         * MODIFIED: Initializes the app with a specific GID.
-         */
-        async function initializeApp(gid) {
-            const { sheetId } = parseSheetUrl(GOOGLE_SHEET_URL);
-            if (!sheetId) {
-                showError("Invalid Google Sheet URL configured in the app.");
-                return;
-            }
+        // 4. Update UI
+        updateProgressUI();
 
-            try {
-                // 1. Fetch data
-                const rawData = await fetchFromGoogleSheet(sheetId, gid);
-                
-                // 2. Parse data
-                const words = parseSheetData(rawData);
-                
-                // 3. Initialize deck
-                currentSheetId = sheetId;
-                
-                // --- NEW: Te-Form Deck Generation ---
-                if (isTeFormDeck) {
-                    // 1. Set a unique storage key for the Te-form deck
-                    deckStorageKey = `kotobaDeck_${sheetId}_${gid}_teForm`;
-                    // 2. Generate the new deck from the parsed verbs
-                    const teDeck = generateTeFormDeck(words);
-                    // 3. Load this new deck into state
-                    loadDeckFromStorage(teDeck);
-                } else {
-                    // --- Original Path ---
-                    // 1. Set the standard storage key
-                    deckStorageKey = `kotobaDeck_${sheetId}_${gid}`;
-                    // 2. Load the deck as-is
-                    loadDeckFromStorage(words);
-                }
-                
-                // 4. Start session (works for both deck types)
-                startStudySession();
-                
-            } catch (error) {
-                console.error("Error loading deck:", error);
-                showError(error.message, error.headers);
-            }
+        // 5. Check if session is over
+        if (studyQueue.length === 0) {
+          // Session is done, rebuild the queue
+          startStudySession(); // This will either build a new session or go to Completed
+        } else {
+          // More cards in this session, show next card
+          nextCard();
+        }
+      }
+
+      /**
+       * Custom error class to pass headers for debugging.
+       */
+      class ErrorWithHeaders extends Error {
+        constructor(message, headers) {
+          super(message);
+          this.name = "ErrorWithHeaders";
+          this.headers = headers;
+        }
+      }
+
+      /**
+       * NEW: Creates the deck selection buttons on the main screen.
+       */
+      function createDeckSelectionScreen() {
+        console.log("Creating Deck Selection Screen...");
+        deckButtonsContainer.innerHTML = ""; // Clear old buttons
+        gidError.classList.add("hidden");
+
+        DECKS.forEach((deck) => {
+          const button = document.createElement("button");
+          button.className =
+            "w-full bg-white text-pink-700 py-4 rounded-lg font-semibold text-lg shadow-md border border-pink-100 hover:bg-pink-50 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-300";
+          button.textContent = deck.name;
+          button.onclick = () => handleDeckSelection(deck); // MODIFIED: Pass the whole deck object
+          deckButtonsContainer.appendChild(button);
+        });
+
+        showSelectionScreen();
+      }
+
+      /**
+       * NEW: Shows the selection screen and hides others.
+       */
+      function showSelectionScreen() {
+        selectionScreen.classList.remove("hidden");
+        loadingScreen.classList.add("hidden");
+        studyScreen.classList.add("hidden");
+        completedScreen.classList.add("hidden");
+
+        // Reset state
+        currentDeck = [];
+        studyQueue = [];
+        currentCard = null;
+      }
+
+      /**
+       * NEW: Handles clicking a deck button.
+       */
+      function handleDeckSelection(deck) {
+        // MODIFIED: Takes deck object
+        console.log("Deck selected:", deck.name);
+        if (!deck.gid && !deck.sourceGid) {
+          gidError.textContent = "This deck is not configured correctly.";
+          gidError.classList.remove("hidden");
+          return;
         }
 
-        /**
-         * MODIFIED: Parses the Google Sheet URL (now only needs sheetId).
-         */
-        function parseSheetUrl(url) {
-            // Regex to find the sheet ID
-            const sheetIdMatch = url.match(/\/d\/(.*?)\//);
-            const sheetId = sheetIdMatch ? sheetIdMatch[1] : null;
-            return { sheetId };
-        }
-        
-        /**
-         * Fetches the sheet data as JSON.
-         * We add &headers=1 to tell the API that Row 1 is the header.
-         */
-        async function fetchFromGoogleSheet(sheetId, gid) {
-            // MODIFIED: Added time parameter (_t) to prevent caching
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}&headers=1&_t=${Date.now()}`;
-            
-            console.log("Fetching from URL:", url);
+        // NEW: Set Te-form flag and determine GID to load
+        isTeFormDeck = deck.type === "te-form";
+        const gid = isTeFormDeck ? deck.sourceGid : deck.gid;
 
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch sheet. Server responded with status: ${response.status}`);
-                }
-                let text = await response.text();
-                
-                // Clean the JSONP response
-                const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
-                if (!jsonMatch || !jsonMatch[1]) {
-                    throw new Error("Could not parse Google Sheet JSON response.");
-                }
-                
-                const data = JSON.parse(jsonMatch[1]);
-                
-                if (data.status === 'error') {
-                    throw new Error(`Google Sheet Error: ${data.errors.map(e => e.detailed_message).join(', ')}`);
-                }
-                
-                return data;
-                
-            } catch (error) {
-                console.error("Fetch error:", error);
-                throw new Error(`Network error or issue fetching sheet: ${error.message}`);
-            }
+        selectionScreen.classList.add("hidden");
+        loadingScreen.classList.remove("hidden");
+        gidError.classList.add("hidden");
+
+        initializeApp(gid); // Load the selected/source deck
+      }
+
+      /**
+       * MODIFIED: Initializes the app with a specific GID.
+       */
+      async function initializeApp(gid) {
+        const { sheetId } = parseSheetUrl(GOOGLE_SHEET_URL);
+        if (!sheetId) {
+          showError("Invalid Google Sheet URL configured in the app.");
+          return;
         }
 
-        /**
-         * Parses the JSON data from Google Sheets into our word format.
-         * This now relies on the `&headers=1` API parameter.
-         */
-        function parseSheetData(data) {
-            const words = [];
-            const rows = data.table.rows;
-            const cols = data.table.cols; // Headers are in the 'cols' array
-            
-            debugHeaders.classList.add('hidden'); // Hide debug info on new parse
-            
-            if (!cols || cols.length === 0) {
-                throw new Error("Sheet has no columns or headers.");
+        try {
+          // 1. Fetch data
+          const rawData = await fetchFromGoogleSheet(sheetId, gid);
+
+          // 2. Parse data
+          const words = parseSheetData(rawData);
+
+          // 3. Initialize deck
+          currentSheetId = sheetId;
+
+          // --- NEW: Te-Form Deck Generation ---
+          if (isTeFormDeck) {
+            // 1. Set a unique storage key for the Te-form deck
+            deckStorageKey = `kotobaDeck_${sheetId}_${gid}_teForm`;
+            // 2. Generate the new deck from the parsed verbs
+            const teDeck = generateTeFormDeck(words);
+            // 3. Load this new deck into state
+            loadDeckFromStorage(teDeck);
+          } else {
+            // --- Original Path ---
+            // 1. Set the standard storage key
+            deckStorageKey = `kotobaDeck_${sheetId}_${gid}`;
+            // 2. Load the deck as-is
+            loadDeckFromStorage(words);
+          }
+
+          // 4. Start session (works for both deck types)
+          startStudySession();
+        } catch (error) {
+          console.error("Error loading deck:", error);
+          showError(error.message, error.headers);
+        }
+      }
+
+      /**
+       * MODIFIED: Parses the Google Sheet URL (now only needs sheetId).
+       */
+      function parseSheetUrl(url) {
+        // Regex to find the sheet ID
+        const sheetIdMatch = url.match(/\/d\/(.*?)\//);
+        const sheetId = sheetIdMatch ? sheetIdMatch[1] : null;
+        return { sheetId };
+      }
+
+      /**
+       * Fetches the sheet data as JSON.
+       * We add &headers=1 to tell the API that Row 1 is the header.
+       */
+      async function fetchFromGoogleSheet(sheetId, gid) {
+        // MODIFIED: Added time parameter (_t) to prevent caching
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}&headers=1&_t=${Date.now()}`;
+
+        console.log("Fetching from URL:", url);
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch sheet. Server responded with status: ${response.status}`
+            );
+          }
+          let text = await response.text();
+
+          // Clean the JSONP response
+          const jsonMatch = text.match(
+            /google\.visualization\.Query\.setResponse\((.*)\);/s
+          );
+          if (!jsonMatch || !jsonMatch[1]) {
+            throw new Error("Could not parse Google Sheet JSON response.");
+          }
+
+          const data = JSON.parse(jsonMatch[1]);
+
+          if (data.status === "error") {
+            throw new Error(
+              `Google Sheet Error: ${data.errors
+                .map((e) => e.detailed_message)
+                .join(", ")}`
+            );
+          }
+
+          return data;
+        } catch (error) {
+          console.error("Fetch error:", error);
+          throw new Error(
+            `Network error or issue fetching sheet: ${error.message}`
+          );
+        }
+      }
+
+      /**
+       * Parses the JSON data from Google Sheets into our word format.
+       * This now relies on the `&headers=1` API parameter.
+       */
+      function parseSheetData(data) {
+        const words = [];
+        const rows = data.table.rows;
+        const cols = data.table.cols; // Headers are in the 'cols' array
+
+        debugHeaders.classList.add("hidden"); // Hide debug info on new parse
+
+        if (!cols || cols.length === 0) {
+          throw new Error("Sheet has no columns or headers.");
+        }
+        if (!rows || rows.length === 0) {
+          throw new Error("Sheet has headers but no data rows.");
+        }
+
+        // Read the headers from the 'cols' array (labels)
+        // The 'id' is "A", "B", etc. The 'label' is our header name from Row 1.
+        const headers = cols.map((col) =>
+          (col.label || "").trim().toLowerCase()
+        );
+
+        console.log("Detected Headers:", JSON.stringify(headers));
+
+        // Helper function to find index from multiple possible names
+        const findHeaderIndex = (possibleNames) => {
+          for (const name of possibleNames) {
+            const index = headers.indexOf(name);
+            if (index > -1) {
+              return index;
             }
-            if (!rows || rows.length === 0) {
-                throw new Error("Sheet has headers but no data rows.");
+          }
+          return -1;
+        };
+
+        // Find column indices based on our template
+        const englishIndex = findHeaderIndex(["english", "meaning"]);
+        const japaneseIndex = findHeaderIndex([
+          "hiragana",
+          "ひらがな",
+          "japanese",
+          "kana",
+          "reading",
+          "よみ",
+        ]);
+        const romajiIndex = findHeaderIndex(["romaji"]);
+        const kanjiIndex = findHeaderIndex(["kanji", "漢字"]);
+        const groupIndex = findHeaderIndex(["group"]);
+
+        // Check for required columns
+        if (englishIndex === -1 || japaneseIndex === -1) {
+          console.error(
+            "Failed to find required columns. English index:",
+            englishIndex,
+            "Japanese index:",
+            japaneseIndex
+          );
+          throw new ErrorWithHeaders(
+            'Sheet must have "English" and "Hiragana" (or "ひらがな") columns in Row 1.',
+            headers
+          );
+        }
+
+        console.log(
+          `Column mapping: English(${englishIndex}), Japanese(${japaneseIndex}), Romaji(${romajiIndex}), Kanji(${kanjiIndex}), Group(${groupIndex})`
+        );
+
+        // Start from i=0 because 'rows' array is *only* data (no header)
+        for (let i = 0; i < rows.length; i++) {
+          const rowData = rows[i].c;
+          // Check if row is null or undefined (can happen with empty rows)
+          if (!rowData) continue;
+
+          // Check for required cells
+          if (
+            rowData &&
+            rowData[englishIndex] &&
+            rowData[englishIndex].v &&
+            rowData[japaneseIndex] &&
+            rowData[japaneseIndex].v
+          ) {
+            const english = rowData[englishIndex].v.toString().trim();
+            const japanese = rowData[japaneseIndex].v.toString().trim();
+
+            // Get optional values, default to empty string if not found
+            const romaji =
+              romajiIndex > -1 && rowData[romajiIndex] && rowData[romajiIndex].v
+                ? rowData[romajiIndex].v.toString().trim()
+                : "";
+
+            const kanji =
+              kanjiIndex > -1 && rowData[kanjiIndex] && rowData[kanjiIndex].v
+                ? rowData[kanjiIndex].v.toString().trim()
+                : "";
+
+            const group =
+              groupIndex > -1 && rowData[groupIndex] && rowData[groupIndex].v
+                ? rowData[groupIndex].v.toString().trim()
+                : "";
+
+            if (english && japanese) {
+              words.push({
+                id: `${english}-${japanese}`, // Create a unique ID for this word
+                english: english,
+                hiragana: japanese,
+                kanji: kanji,
+                romaji: romaji,
+                group: group,
+                level: 0, // Default level for new words
+              });
             }
+          }
+        }
 
-            // Read the headers from the 'cols' array (labels)
-            // The 'id' is "A", "B", etc. The 'label' is our header name from Row 1.
-            const headers = cols.map(col => (col.label || '').trim().toLowerCase());
-            
-            console.log("Detected Headers:", JSON.stringify(headers));
-            
-            // Helper function to find index from multiple possible names
-            const findHeaderIndex = (possibleNames) => {
-                for (const name of possibleNames) {
-                    const index = headers.indexOf(name);
-                    if (index > -1) {
-                        return index;
-                    }
-                }
-                return -1;
-            };
+        if (words.length === 0) {
+          throw new Error(
+            "No valid word rows found. Check your sheet for data."
+          );
+        }
 
-            // Find column indices based on our template
-            const englishIndex = findHeaderIndex(['english', 'meaning']);
-            const japaneseIndex = findHeaderIndex(['hiragana', 'ひらがな', 'japanese', 'kana', 'reading', 'よみ']);
-            const romajiIndex = findHeaderIndex(['romaji']);
-            const kanjiIndex = findHeaderIndex(['kanji', '漢字']);
-            const groupIndex = findHeaderIndex(['group']);
+        return words;
+      }
 
-            // Check for required columns
-            if (englishIndex === -1 || japaneseIndex === -1) {
-                console.error("Failed to find required columns. English index:", englishIndex, "Japanese index:", japaneseIndex);
-                throw new ErrorWithHeaders(
-                    'Sheet must have "English" and "Hiragana" (or "ひらがな") columns in Row 1.',
-                    headers
-                );
-            }
-            
-            console.log(`Column mapping: English(${englishIndex}), Japanese(${japaneseIndex}), Romaji(${romajiIndex}), Kanji(${kanjiIndex}), Group(${groupIndex})`);
+      /**
+       * --- NEW: Te-Form Conjugation Logic ---
+       * Calculates the Te-form of a verb based on its hiragana and group.
+       * THIS IS A TOTAL REWRITE to fix the masu-form bug.
+       */
+      function getDictionaryForm(masuForm, group) {
+        const stem = masuForm.slice(0, -2); // remove ます
+        if (!masuForm.endsWith("ます")) return masuForm; // Not a masu form
 
-            // Start from i=0 because 'rows' array is *only* data (no header)
-            for (let i = 0; i < rows.length; i++) {
-                const rowData = rows[i].c;
-                // Check if row is null or undefined (can happen with empty rows)
-                if (!rowData) continue;
+        if (group === "2") {
+          return stem + "る"; // e.g., たべます -> たべる
+        }
+
+        if (group === "3") {
+          if (masuForm === "きます") return "くる";
+          if (masuForm.endsWith("します")) {
+            return stem + "する"; // e.g., べんきょうします -> べんきょうする
+          }
+          return masuForm; // Fallback
+        }
+
+        if (group === "1") {
+          const lastKanaOfStem = stem.slice(-1);
+          const kanaStem = stem.slice(0, -1);
+
+          switch (lastKanaOfStem) {
+            case "い":
+              return kanaStem + "う"; // e.g., あいます -> あう
+            case "き":
+              return kanaStem + "く"; // e.g., いきます -> いく
+            case "ぎ":
+              return kanaStem + "ぐ"; // e.g., およぎます -> およぐ
+            case "し":
+              return kanaStem + "す"; // e.g., はなします -> はなす
+            case "ち":
+              return kanaStem + "つ"; // e.g., まちます -> まつ
+            case "に":
+              return kanaStem + "ぬ"; // e.g., しにます -> しぬ
+            case "び":
+              return kanaStem + "ぶ"; // e.g., あそびます -> あそぶ
+            case "み":
+              return kanaStem + "む"; // e.g., よみます -> よむ
+            case "り":
+              return kanaStem + "る"; // e.g., はいります -> はいる
+            default:
+              return masuForm; // Fallback
+          }
+        }
+        return masuForm; // Default fallback
+      }
+
+      function calculateTeForm(dictionaryForm, group) {
+        if (!dictionaryForm) return "";
+
+        if (group === "2") {
+          return dictionaryForm.slice(0, -1) + "て"; // e.g., たべる -> たべて
+        }
+
+        if (group === "3") {
+          if (dictionaryForm === "くる") return "きて";
+          if (dictionaryForm.endsWith("する")) {
+            return dictionaryForm.slice(0, -2) + "して"; // e.g., べんきょうする -> べんきょうして
+          }
+          return dictionaryForm; // Fallback
+        }
+
+        if (group === "1") {
+          // Exception: いく -> いって
+          if (dictionaryForm === "いく") return "いって";
+
+          const lastKana = dictionaryForm.slice(-1);
+          const stem = dictionaryForm.slice(0, -1);
+
+          switch (lastKana) {
+            case "う":
+            case "つ":
+            case "る":
+              return stem + "って"; // e.g., あう -> あって, まつ -> まって, はいる -> はいって
+            case "む":
+            case "ぶ":
+            case "ぬ":
+              return stem + "んで"; // e.g., よむ -> よんで, あそぶ -> あそんで
+            case "く":
+              return stem + "いて"; // e.g., かく -> かいて
+            case "ぐ":
+              return stem + "いで"; // e.g., およぐ -> およいで
+            case "す":
+              return stem + "して"; // e.g., はなす -> はなして
+            default:
+              return dictionaryForm; // Fallback
+          }
+        }
+        return dictionaryForm; // Fallback
+      }
+
+      /**
+       * --- NEW: Te-Form Deck Generator ---
+       * Takes the parsed verb deck and transforms it into a Te-form quiz deck.
+       */
+      function generateTeFormDeck(verbDeck) {
+        return verbDeck.map((verb) => {
+          // --- MODIFIED: Use new 2-step conjugation ---
+          // 1. Get dictionary form from masu-form (e.g., はいります -> はいる)
+          const dictionaryForm = getDictionaryForm(verb.hiragana, verb.group);
+          // 2. Get Te-form from dictionary form (e.g., はいる -> はいって)
+          const teForm = calculateTeForm(dictionaryForm, verb.group);
+
+          return {
+            // Create a new card object for the Te-form quiz
+            id: `${verb.id}-te`, // Unique ID for Te-form card
+
+            // MODIFIED: Store base forms for the front
+            baseKanji: verb.kanji,
+            baseHiragana: verb.hiragana, // This is still the masu-form, which is fine for display
+
+            // MODIFIED: Store Te-form and English for the back
+            teForm: teForm, // This is the new, correct Te-form
+            english: verb.english,
+
+            group: verb.group, // For reference
+            level: 0, // All Te-form cards start at level 0
+          };
+        });
+      }
+
+      /**
+       * --- NEW: Helper to get full group text ---
+       * Converts a group number (1, 2, 3) into display text.
+       */
+      function getGroupText(group) {
+        switch (group) {
+          case "1":
+            return "Group 1 (ikimasu)";
+          case "2":
+            return "Group 2 (emasu)";
+          case "3":
+            return "Group 3 (shimasu/kimasu)";
+          default:
+            return ""; // Return empty if group is not 1, 2, or 3
+        }
+      }
+
+      /**
+       * Loads the deck, merging with any saved progress from localStorage.
+       */
+      function loadDeckFromStorage(newWords) {
+        let savedDeck = [];
+        try {
+          const savedData = localStorage.getItem(deckStorageKey);
+          if (savedData) {
+            savedDeck = JSON.parse(savedData);
+          }
+        } catch (e) {
+          console.error("Failed to parse saved deck from localStorage", e);
+          savedDeck = []; // Start fresh if storage is corrupt
+        }
+
+        const savedWordMap = new Map(savedDeck.map((word) => [word.id, word]));
+
+        currentDeck = newWords.map((newWord) => {
+          const savedWord = savedWordMap.get(newWord.id);
+          if (savedWord) {
+            // Return saved word, but update with any new data from sheet
+            // (e.g., if user corrected a typo in the sheet)
+            return { ...newWord, level: savedWord.level };
+          } else {
+            // This is a new word not seen in storage
+            return newWord;
+          }
+        });
+
+        // Save the merged deck back to storage
+        saveDeckToStorage();
+      }
+
+      /**
+       * Saves the current deck (with updated levels) to localStorage.
+       */
+      function saveDeckToStorage() {
+        try {
+          localStorage.setItem(deckStorageKey, JSON.stringify(currentDeck));
+        } catch (e) {
+          console.error("Failed to save deck to localStorage", e);
+          showError(
+            "Error saving progress. Your browser's storage might be full."
+          );
+        }
+      }
+
+      /**
+       * Resets all word levels in the current deck to 0 and starts over.
+       */
+      function resetCurrentDeck() {
+        currentDeck.forEach((word) => (word.level = 0));
+        saveDeckToStorage();
+        startStudySession();
+      }
+
+      /**
+       * Sets up and transitions to the study screen.
+       */
+      function startStudySession() {
+        // 1. Build the study queue
+        buildStudyQueue();
+
+        // 2. Check if we're done
+        if (studyQueue.length === 0) {
+          showCompletedScreen();
+          return;
+        }
+
+        // 3. Show the study screen
+        loadingScreen.classList.add("hidden");
+        completedScreen.classList.add("hidden");
+        studyScreen.classList.remove("hidden");
+
+        // 4. Update UI and show first card
+        updateProgressUI();
+        nextCard();
+      }
+
+      /**
+       * Shows the completed screen.
+       */
+      function showCompletedScreen() {
+        loadingScreen.classList.add("hidden");
+        studyScreen.classList.add("hidden");
+        completedScreen.classList.remove("hidden");
+      }
+
+      /**
+       * Creates the study queue based on word levels (Spaced Repetition).
+       * Prioritizes lower-level words.
+       *
+       * --- NEW "Duolingo" STRATEGY ---
+       * 1. ALWAYS include ALL review cards (Level 1 and 2).
+       * 2. ONLY introduce a SMALL BATCH of new cards (Level 0) at a time.
+       * This prevents the user from being overwhelmed by 100+ new words.
+       */
+      function buildStudyQueue() {
+        const level0 = currentDeck.filter((w) => w.level === 0);
+        const level1 = currentDeck.filter((w) => w.level === 1);
+        const level2 = currentDeck.filter((w) => w.level === 2);
+        // Level 3 (Mastered) words are not added to the queue
+
+        // 1. Get all words for review
+        const reviewQueue = [...shuffleArray(level1), ...shuffleArray(level2)];
+
+        // 2. Get a small batch of new words
+        const newWordsQueue = shuffleArray(level0).slice(
+          0,
+          NEW_CARDS_PER_SESSION
+        );
+
+        // 3. Combine them and shuffle
+        studyQueue = shuffleArray([...reviewQueue, ...newWordsQueue]);
+
+        // NEW: Set session progress tracking
+        sessionTotal = studyQueue.length;
+        sessionCardsDone = 0;
+
+        console.log(
+          `Study queue built: ${reviewQueue.length} review words, ${newWordsQueue.length} new words. Total: ${studyQueue.length}`
+        );
+      }
+
+      /**
+       * Fisher-Yates shuffle algorithm.
+       */
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      /**
+       * Displays the next card from the study queue.
+       */
+      function nextCard() {
+        // 1. Get next card
+        currentCard = studyQueue.shift(); // Get and remove first card from queue
+
+        // 2. Reset card state
+        card.classList.remove("is-flipped");
+        answerButtons.classList.add("hidden");
+        tapToFlip.classList.remove("hidden");
+
+        // --- NEW: Logic for Te-Form Deck ---
+        if (isTeFormDeck) {
+          // --- MODIFIED: Te-Form Deck Logic ---
+
+          // Front: Show Base Form (Kanji and Hiragana)
+          // Use Kanji if available, otherwise use Hiragana as main
+          cardFrontMain.textContent = currentCard.baseKanji
+            ? currentCard.baseKanji
+            : currentCard.baseHiragana;
+
+          // Only show Hiragana if Kanji is present (to avoid duplication)
+          if (currentCard.baseKanji) {
+            cardFrontSub.textContent = currentCard.baseHiragana;
+            cardFrontSub.classList.remove("hidden");
+          } else {
+            cardFrontSub.classList.add("hidden");
+          }
+
+          // Back: Show Te-Form
+          cardKanji.textContent = currentCard.teForm;
+          cardHiragana.textContent = currentCard.english; // Show English as sub-text
+          cardHiragana.classList.remove("hidden");
+          cardRomaji.classList.add("hidden"); // No romaji for this deck
+
+          // Show Group
+          if (currentCard.group) {
+            cardGroup.textContent = getGroupText(currentCard.group);
+            cardGroup.classList.remove("hidden");
+          } else {
+            cardGroup.classList.add("hidden");
+          }
+        } else {
+          // --- Original Logic (for normal decks) ---
+
+          // Front: Show English
+          cardFrontMain.textContent = currentCard.english;
+          cardFrontSub.classList.add("hidden"); // Hide sub-text
+
+          // Back of card
+          // Use Kanji if available, otherwise use Hiragana as main text
+          cardKanji.textContent = currentCard.kanji
+            ? currentCard.kanji
+            : currentCard.hiragana;
+
+          // Only show Hiragana if Kanji is present (to avoid duplication)
+          if (currentCard.kanji) {
+            cardHiragana.textContent = currentCard.hiragana;
+            cardHiragana.classList.remove("hidden");
+          } else {
+            cardHiragana.classList.add("hidden");
+          }
+
+          // Show Romaji if available
+          if (currentCard.romaji) {
+            cardRomaji.textContent = currentCard.romaji;
+            cardRomaji.classList.remove("hidden");
+          } else {
+            cardRomaji.classList.add("hidden");
+          }
+
+          // Show Group if available
+          if (currentCard.group) {
+            cardGroup.textContent = getGroupText(currentCard.group);
+            cardGroup.classList.remove("hidden");
+          } else {
+            cardGroup.classList.add("hidden");
+          }
+        }
+      }
+
+      /**
+       * Updates the progress bar and level counts.
+       */
+      function updateProgressUI() {
+        const counts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+        currentDeck.forEach((word) => {
+          counts[word.level]++;
+        });
+
+        level0Count.textContent = `New: ${counts[0]}`;
+        level1Count.textContent = `Learning: ${counts[1]}`;
+        level2Count.textContent = `Familiar: ${counts[2]}`;
+        level3Count.textContent = `Mastered: ${counts[3]}`;
+
+        const totalWords = currentDeck.length;
+        if (totalWords === 0) {
+          progressBar.style.width = "0%";
+          return;
+        }
+
+        // Progress = (Mastered words / Total words)
+        const progressPercent = (counts[3] / totalWords) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // NEW: Update session progress
+        sessionProgress.textContent = `Session: ${sessionCardsDone} / ${sessionTotal}`;
+        const sessionPercent =
+          sessionTotal > 0 ? (sessionCardsDone / sessionTotal) * 100 : 0;
+        sessionProgressBar.style.width = `${sessionPercent}%`;
+      }
+
+      /**
+       * Shows an error message on the loading screen.
+       */
+      function showError(message, headers = []) {
+        // Make sure loading screen is visible to show the error
+        selectionScreen.classList.add("hidden");
+        studyScreen.classList.add("hidden");
+        completedScreen.classList.add("hidden");
+        loadingScreen.classList.remove("hidden");
+
+        errorMessage.textContent = message;
+        errorMessage.classList.remove("hidden");
+
+        if (headers && headers.length > 0) {
+          debugHeaders.textContent = `Detected Headers: ${JSON.stringify(
+            headers
+          )}`;
+          debugHeaders.classList.remove("hidden");
+        } else {
+          debugHeaders.classList.add("hidden");
+        }
+      }
+    </script>
+  </body>
+</html>
